@@ -57,9 +57,7 @@ class Calculator {
             var subResult: Int = 0;
             
             if (op == "x") {
-                guard subResult = number * secondNumber else {
-                    throw CalcError.integerOverflow;
-                };
+                subResult = number * secondNumber;
             }
             else if (op == "/"){
                 if (secondNumber == 0) {
