@@ -16,9 +16,9 @@ class Calculator {
         
         var description: String {
             switch self {
-            case .invalidInput(let msg): return "Invalid input: \(msg)"
-            case .divisionByZero: return "Division by zero"
-            case .integerOverflow: return "Integer overflow"
+                case .invalidInput(let msg): return "Invalid input: \(msg)"
+                case .divisionByZero: return "Division by zero"
+                case .integerOverflow: return "Integer overflow"
             }
         }
     }
@@ -74,6 +74,7 @@ class Calculator {
             // Add the subResult;
             return try applyHighPrecedence(args: newArgs);
         }
+        // Skip 2 first elements
         else if (op == "+" || op == "-") {
             // Calculate if there are high precedence operator after this
             let newArgs = try ([args[0], args[1]] + applyHighPrecedence(args: Array(args.dropFirst(2))));
@@ -98,28 +99,28 @@ class Calculator {
         }
 
         let op = args[1];
+        
+        guard op == "+" || op == "-" else {
+            throw CalcError.invalidInput("Invalid operator")
+        }
 
-        if (op == "+" || op == "-") {
-            guard let secondNumber = Int(args[2]) else {
-                throw CalcError.invalidInput("Expected a number");
-            }
+        guard let secondNumber = Int(args[2]) else {
+            throw CalcError.invalidInput("Expected a number");
+        }
 
-            var subResult: Int = 0;
-            
-            if (op == "+") {
-                subResult = number + secondNumber;
-            }
-            else {
-                subResult = number - secondNumber;
-            }
-            
-            // Remove the calculated elements
-            var newArgs = [String(subResult)] + args.dropFirst(3);
-            // Add the subResult;
-            return try applyLowPrecedence(args: newArgs);
+        var subResult: Int = 0;
+        
+        if (op == "+") {
+            subResult = number + secondNumber;
+        }
+        else {
+            subResult = number - secondNumber;
         }
         
-        throw CalcError.invalidInput("Invalid operand");
+        // Remove the calculated elements
+        let newArgs = [String(subResult)] + args.dropFirst(3);
+        // Add the subResult;
+        return try applyLowPrecedence(args: newArgs);
     }
 }
 
