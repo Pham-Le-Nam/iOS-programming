@@ -24,9 +24,11 @@ class Calculator {
     }
     
     func calculate(args: [String]) throws -> Int { // returns Int
+        // Calculate * / % from left to right
         let afterHigh = try applyHighPrecedence(args: args)
+        // Calculate + - from left to right
         let afterLow = try applyLowPrecedence(args: afterHigh)
-        // Convert result to int to remove its sign
+        // Convert result to int to remove its + sign if exists
         guard let result = Int(afterLow[0]) else {
             throw CalcError.invalidInput("Result cannot be converted to Int")
         }
@@ -39,32 +41,41 @@ class Calculator {
             return args;
         }
 
+        // 2 elements couldn't be calculated
         guard args.count >= 3 else {
             throw CalcError.invalidInput("Invalid input amount");
         }
 
+        // Get and convert first operand into an Integer
         guard let number = Int(args[0]) else {
             throw CalcError.invalidInput("Expected a number");
         }
 
+        // Operator
         let op = args[1];
 
+        // Check if operator is a high precedence
         if (op == "x" || op == "/" || op == "%") {
+            // Get and convert second operand into an integer
             guard let secondNumber = Int(args[2]) else {
                 throw CalcError.invalidInput("Expected a number");
             }
 
             var subResult: Int = 0;
             
+            // Multiplication
             if (op == "x") {
                 subResult = number * secondNumber;
             }
+            // Division
             else if (op == "/"){
+                // Division by zero error
                 if (secondNumber == 0) {
                     throw CalcError.divisionByZero;
                 }
                 subResult = number / secondNumber;
             }
+            // Modulo
             else {
                 subResult = number % secondNumber;
             }
@@ -90,16 +101,20 @@ class Calculator {
             return args;
         }
 
+        // 2 elements couldn't be calculated
         guard args.count >= 3 else {
             throw CalcError.invalidInput("Invalid input amount");
         }
 
+        // Get and convert first operand into an Integer
         guard let number = Int(args[0]) else {
             throw CalcError.invalidInput("Expected a number");
         }
 
+        // Operator
         let op = args[1];
         
+        // Invalid operator
         guard op == "+" || op == "-" else {
             throw CalcError.invalidInput("Invalid operator")
         }
