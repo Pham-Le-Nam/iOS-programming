@@ -35,13 +35,14 @@ class Calculator {
         return result
     }
     
-    // Calculate all */%
+    // Calculate all * / %
     private func applyHighPrecedence(args: [String]) throws -> [String] {
+        // Last operand in the calculation
         if (args.count == 1) {
             return args;
         }
 
-        // 2 elements couldn't be calculated
+        // 1 operand and 1 operator couldn't be calculated
         guard args.count >= 3 else {
             throw CalcError.invalidInput("Invalid input amount");
         }
@@ -95,8 +96,9 @@ class Calculator {
         throw CalcError.invalidInput("Invalid operand");
     }
     
-    // Calculate all +-
+    // Calculate all + -
     private func applyLowPrecedence(args: [String]) throws -> [String] {
+        // Last operand in the calculation
         if (args.count == 1) {
             return args;
         }
@@ -125,9 +127,11 @@ class Calculator {
 
         var subResult: Int = 0;
         
+        // Addition
         if (op == "+") {
             subResult = number + secondNumber;
         }
+        // Subtraction
         else {
             subResult = number - secondNumber;
         }
