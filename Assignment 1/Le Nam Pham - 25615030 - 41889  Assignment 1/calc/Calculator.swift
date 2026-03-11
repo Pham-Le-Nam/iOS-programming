@@ -48,7 +48,7 @@ class Calculator {
         }
 
         // Get and convert first operand into an Integer
-        guard let number = Int(args[0]) else {
+        guard let firstNumber = Int(args[0]) else {
             throw CalcError.invalidInput("Expected a number");
         }
 
@@ -66,7 +66,12 @@ class Calculator {
             
             // Multiplication
             if (op == "x") {
-                subResult = number * secondNumber;
+                // Check integer overflow
+                let (calculationResult, didOverflow) = firstNumber.multipliedReportingOverflow(by: secondNumber)
+                guard !didOverflow else {
+                    throw CalcError.integerOverflow;
+                }
+                subResult = calculationResult;
             }
             // Division
             else if (op == "/"){
@@ -74,11 +79,11 @@ class Calculator {
                 if (secondNumber == 0) {
                     throw CalcError.divisionByZero;
                 }
-                subResult = number / secondNumber;
+                subResult = firstNumber / secondNumber;
             }
             // Modulo
             else {
-                subResult = number % secondNumber;
+                subResult = firstNumber % secondNumber;
             }
             
             // Replace the calculated elements with the subResult
@@ -109,7 +114,7 @@ class Calculator {
         }
 
         // Get and convert first operand into an Integer
-        guard let number = Int(args[0]) else {
+        guard let firstNumber = Int(args[0]) else {
             throw CalcError.invalidInput("Expected a number");
         }
 
@@ -129,11 +134,16 @@ class Calculator {
         
         // Addition
         if (op == "+") {
-            subResult = number + secondNumber;
+            // Check integer overflow
+            let (result, didOverflow) = firstNumber.addingReportingOverflow(secondNumber)
+            guard !didOverflow else {
+                throw CalcError.integerOverflow
+            }
+            subResult = result
         }
         // Subtraction
         else {
-            subResult = number - secondNumber;
+            subResult = firstNumber - secondNumber;
         }
         
         // Replace the calculated elements with the subResult
