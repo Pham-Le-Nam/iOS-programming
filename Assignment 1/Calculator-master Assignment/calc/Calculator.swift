@@ -81,9 +81,9 @@ class Calculator {
                 subResult = number % secondNumber;
             }
             
-            // Remove the calculated elements
+            // Replace the calculated elements with the subResult
             let newArgs = [String(subResult)] + args.dropFirst(3);
-            // Add the subResult;
+            // Recursion until all of the high precedent operator is calculated.
             return try applyHighPrecedence(args: newArgs);
         }
         // Skip 2 first elements
@@ -103,7 +103,7 @@ class Calculator {
             return args;
         }
 
-        // 2 elements couldn't be calculated
+        // 1 operand and 1 operator couldn't be calculated
         guard args.count >= 3 else {
             throw CalcError.invalidInput("Invalid input amount");
         }
@@ -136,9 +136,9 @@ class Calculator {
             subResult = number - secondNumber;
         }
         
-        // Remove the calculated elements
+        // Replace the calculated elements with the subResult
         let newArgs = [String(subResult)] + args.dropFirst(3);
-        // Add the subResult;
+        // Recursion until all of the low precedent operator is calculated.
         return try applyLowPrecedence(args: newArgs);
     }
 }
