@@ -40,7 +40,7 @@ struct SettingsView: View {
                 Text("\(Int(numberOfBubbles))")
                                     .padding()
                 NavigationLink(
-                    destination: StartGameView(playerName: playerName),//1Add for name UserDefaults 3
+                    destination: StartGameView(playerName: playerName, time: countdownValue, numberOfBubbles: Int(numberOfBubbles)),//1Add for name UserDefaults 3
                     label: {
                         Text("Start Game")
                             .font(.title)
