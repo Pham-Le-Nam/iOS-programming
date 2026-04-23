@@ -5,6 +5,7 @@ struct Bubble: Identifiable {
     let id = UUID()
     let color: BubbleColor
     var position: CGPoint
+    var velocity: CGVector
 }
 
 // MARK: - Bubble Types + Probability + Points
@@ -57,7 +58,7 @@ struct StartGameView: View {
     var time: Double
     var numberOfBubbles: Int
     
-    let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
+    let timer = Timer.publish(every: 0.016, on: .main, in: .common).autoconnect()
     
     @State private var timeLeft: Int
     @State private var score: Float = 0
@@ -69,6 +70,7 @@ struct StartGameView: View {
     @State private var lastBubbleColor: BubbleColor? = nil
     @State private var countdown: Int = 3
     @State private var isCountingDown: Bool = true
+    @State private var tickCounter = 0
 
     let bubbleSize: CGFloat = 60
     
@@ -87,35 +89,36 @@ struct StartGameView: View {
                 
                 // MARK: HUD (Top Bar)
                 HStack {
-                    Text("Time Left: \(timeLeft)")
-                    
+                    Text("Time: \(timeLeft)")
                     Spacer()
-                    
                     Text("Score: \(String(format: "%.1f", score))")
-                    
                     Spacer()
-                    
                     Text("High Score: \(String(format: "%.1f", getHighestScore()))")
                 }
                 .padding()
                 
                 if isPostGame {
-                    VStack(spacing: 20) {
-                        Text("Final Score: \(score)")
-                        
-                        Button("Replay") {
-                            resetGame()
+                    // Post-game functions
+                    ZStack {
+                        Color.black.opacity(0.3) // optional dim background
+
+                        VStack(spacing: 20) {
+                            Text("Final Score: \(String(format: "%.1f", score))")
+                            Button("Replay") {
+                                resetGame()
+                            }
+                            Button("Back to Settings") {
+                                dismiss()
+                            }
                         }
-                        
-                        Button("Back to Settings") {
-                            dismiss()
-                        }
+                        .padding()
+                        .background(Color.white)
+                        .cornerRadius(12)
                     }
-                    .padding()
-                    .background(Color.white)
-                    .cornerRadius(12)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
                 else if isCountingDown {
+                    // Pre-game countdown
                     ZStack {
                         Color.black.opacity(0.6)
                             .ignoresSafeArea()
@@ -127,6 +130,7 @@ struct StartGameView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
                 else {
+                    // Start the game
                     // MARK: Bubbles
                     ForEach(bubbles) { bubble in
                         Circle()
@@ -152,18 +156,7 @@ struct StartGameView: View {
     
     // MARK: Game Loop
     private func updateGame(in size: CGSize) {
-        
-        // countdown phase
-        if isCountingDown {
-            if countdown > 1 {
-                countdown -= 1
-            } else {
-                isCountingDown = false
-            }
-            return
-        }
-        
-        // normal game
+        // game finished
         guard timeLeft > 0 else {
             if !isGameFinished {
                 isGameFinished = true
@@ -172,16 +165,46 @@ struct StartGameView: View {
             return
         }
         
-        timeLeft -= 1
-        
-        bubbles.removeAll { _ in Bool.random() }
-        
-        let availableSpace = numberOfBubbles - bubbles.count
-        let newCount = Int.random(in: 0...availableSpace)
-        
-        for _ in 0..<newCount {
-            bubbles.append(generateBubble(in: size))
+        tickCounter += 1
+        if tickCounter % 60 == 0 {   // ~1 second
+            // countdown phase
+            if isCountingDown {
+                if countdown > 1 {
+                    countdown -= 1
+                } else {
+                    isCountingDown = false
+                }
+                return
+            }
+            
+            timeLeft -= 1
+            
+            // randomly remove some existing bubbles
+            bubbles.removeAll { _ in Bool.random() }
+            
+            // spawn new bubbles
+            let availableSpace = numberOfBubbles - bubbles.count
+            let newCount = Int.random(in: 0...availableSpace)
+            
+            for _ in 0..<newCount {
+                bubbles.append(generateBubble(in: size))
+            }
         }
+        
+        // MOVE bubbles
+        for i in bubbles.indices {
+            bubbles[i].position.y += bubbles[i].velocity.dy * 0.016
+        }
+        
+        // REMOVE bubbles that go off-screen
+        bubbles.removeAll {
+            $0.position.x < -bubbleSize ||
+            $0.position.x > size.width + bubbleSize ||
+            $0.position.y < -bubbleSize ||
+            $0.position.y > size.height + bubbleSize
+        }
+        
+        
     }
     
     // MARK: Bubble Generator (no overlap)
@@ -198,7 +221,20 @@ struct StartGameView: View {
             distance($0.position, position) < bubbleSize
         })
         
-        return Bubble(color: BubbleColor.random(), position: position)
+        // speed increases as time decreases
+        let progress = 1 - (Float(timeLeft) / Float(time))   // 0 → 1
+        let baseSpeed: CGFloat = 80
+        let maxExtra: CGFloat = 200
+        let speed = baseSpeed + CGFloat(progress) * maxExtra
+
+        // ONLY upward movement
+        let velocity = CGVector(dx: 0, dy: speed)
+        
+        return Bubble(
+            color: BubbleColor.random(),
+            position: position,
+            velocity: velocity
+        )
     }
     
     // MARK: Pop Logic (Combo rule)
