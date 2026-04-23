@@ -23,11 +23,16 @@ enum BubbleColor: CaseIterable {
     
     var colorValue: Color {
         switch self {
-        case .red: return .red
-        case .pink: return .pink
-        case .green: return .green
-        case .blue: return .blue
-        case .black: return .black
+        case .red:
+            return Color(red: 0.85, green: 0.1, blue: 0.1)   // deeper red
+        case .pink:
+            return Color(red: 1.0, green: 0.6, blue: 0.75)   // lighter, softer pink
+        case .green:
+            return .green
+        case .blue:
+            return .blue
+        case .black:
+            return .black
         }
     }
     
@@ -55,7 +60,7 @@ struct StartGameView: View {
     let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
     
     @State private var timeLeft: Int
-    @State private var score: Int = 0
+    @State private var score: Float = 0
     @State private var isGameFinished: Bool = false
     @State private var showHighScoreSheet: Bool = false
     @State private var isPostGame: Bool = false
@@ -86,11 +91,11 @@ struct StartGameView: View {
                     
                     Spacer()
                     
-                    Text("Score: \(score)")
+                    Text("Score: \(String(format: "%.1f", score))")
                     
                     Spacer()
                     
-                    Text("High Score: \(getHighestScore())")
+                    Text("High Score: \(String(format: "%.1f", getHighestScore()))")
                 }
                 .padding()
                 
@@ -200,10 +205,10 @@ struct StartGameView: View {
     private func popBubble(_ bubble: Bubble) {
         
         if let last = lastBubbleColor, last == bubble.color {
-            let boosted = Int(Double(bubble.color.points) * 1.5)
-            score += boosted
+            let boosted = Float(Double(bubble.color.points) * 1.5)
+            score += Float(boosted)
         } else {
-            score += bubble.color.points
+            score += Float(bubble.color.points)
         }
         
         lastBubbleColor = bubble.color
@@ -229,7 +234,7 @@ struct StartGameView: View {
         isCountingDown = true
     }
     
-    private func getHighestScore() -> Int {
+    private func getHighestScore() -> Float {
         guard let data = UserDefaults.standard.data(forKey: "PlayerScores"),
               let scores = try? JSONDecoder().decode([PlayerScore].self, from: data),
               let maxScore = scores.map({ $0.score }).max()

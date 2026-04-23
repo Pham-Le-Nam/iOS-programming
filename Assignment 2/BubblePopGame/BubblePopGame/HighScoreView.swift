@@ -10,7 +10,7 @@ import SwiftUI
 struct HighScoreView: View {
     @State private var playerScores: [PlayerScore] = [] // 3Add HighScore List 2
     var playerName: String //2Add for HighScore UserDefaults 5
-    var score: Int //2Add for HighScore UserDefaults 6
+    var score: Float //2Add for HighScore UserDefaults 6
     
     var body: some View {
         VStack{ //2Add for HighScore UserDefaults 7
@@ -23,8 +23,8 @@ struct HighScoreView: View {
 //            Text("Score: \(score)")
 //                           .font(.headline)//2Add for HighScore UserDefaults 9
             
-            List(playerScores.sorted(by: {$0.score > $1.score}).prefix(5)){ playerScore in
-                Text("\(playerScore.playerName): \(playerScore.score)")
+            List(playerScores.sorted(by: {$0.score > $1.score}).prefix(10)){ playerScore in
+                Text("\(playerScore.playerName): \(String(format: "%.1f", playerScore.score))")
             } // 3Add HighScore List 3
             //Displaying the top 5 Scores only
             Spacer() //2Add for HighScore UserDefaults 10

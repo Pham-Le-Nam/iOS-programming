@@ -10,5 +10,5 @@ import Foundation
 struct PlayerScore: Identifiable, Codable {
     var id = UUID()
     let playerName: String
-    var score: Int
+    var score: Float
 }
