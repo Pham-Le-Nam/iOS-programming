@@ -56,5 +56,5 @@ struct HighScoreView: View {
 }
 
 #Preview {
-    HighScoreView(playerName: "", score: 5) //2Add for HighScore UserDefaults 11
+    HighScoreView(playerName: "", score: 0) //2Add for HighScore UserDefaults 11
 }

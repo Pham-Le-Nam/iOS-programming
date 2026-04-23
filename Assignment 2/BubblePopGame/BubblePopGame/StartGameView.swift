@@ -57,11 +57,14 @@ struct StartGameView: View {
     @State private var timeLeft: Int
     @State private var score: Int = 0
     @State private var isGameFinished: Bool = false
-    
+    @State private var showHighScoreSheet: Bool = false
+    @State private var isPostGame: Bool = false
+    @Environment(\.dismiss) private var dismiss
     @State private var bubbles: [Bubble] = []
     @State private var lastBubbleColor: BubbleColor? = nil
-    
-    let maxBubbles = 15
+    @State private var countdown: Int = 3
+    @State private var isCountingDown: Bool = true
+
     let bubbleSize: CGFloat = 60
     
     // MARK: Init
@@ -87,46 +90,88 @@ struct StartGameView: View {
                     
                     Spacer()
                     
-                    Text("High Score")
+                    Text("High Score: \(getHighestScore())")
                 }
                 .padding()
                 
-                // MARK: Bubbles
-                ForEach(bubbles) { bubble in
-                    Circle()
-                        .fill(bubble.color.colorValue)
-                        .frame(width: bubbleSize, height: bubbleSize)
-                        .position(bubble.position)
-                        .onTapGesture {
-                            popBubble(bubble)
+                if isPostGame {
+                    VStack(spacing: 20) {
+                        Text("Final Score: \(score)")
+                        
+                        Button("Replay") {
+                            resetGame()
                         }
+                        
+                        Button("Back to Settings") {
+                            dismiss()
+                        }
+                    }
+                    .padding()
+                    .background(Color.white)
+                    .cornerRadius(12)
+                }
+                else if isCountingDown {
+                    ZStack {
+                        Color.black.opacity(0.6)
+                            .ignoresSafeArea()
+                        
+                        Text("\(countdown)")
+                            .font(.system(size: 80, weight: .bold))
+                            .foregroundColor(.white)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                }
+                else {
+                    // MARK: Bubbles
+                    ForEach(bubbles) { bubble in
+                        Circle()
+                            .fill(bubble.color.colorValue)
+                            .frame(width: bubbleSize, height: bubbleSize)
+                            .position(bubble.position)
+                            .onTapGesture {
+                                popBubble(bubble)
+                            }
+                    }
                 }
             }
             .onReceive(timer) { _ in
                 updateGame(in: geo.size)
             }
-            .sheet(isPresented: $isGameFinished) {
+            .sheet(isPresented: $showHighScoreSheet, onDismiss: {
+                isPostGame = true
+            }) {
                 HighScoreView(playerName: playerName, score: score)
             }
         }
     }
     
     // MARK: Game Loop
-    func updateGame(in size: CGSize) {
+    private func updateGame(in size: CGSize) {
         
-        guard timeLeft > 0 else {
-            isGameFinished = true
+        // countdown phase
+        if isCountingDown {
+            if countdown > 1 {
+                countdown -= 1
+            } else {
+                isCountingDown = false
+            }
             return
         }
         
-        // countdown
+        // normal game
+        guard timeLeft > 0 else {
+            if !isGameFinished {
+                isGameFinished = true
+                showHighScoreSheet = true
+            }
+            return
+        }
+        
         timeLeft -= 1
         
-        // remove random bubbles (not popped ones)
         bubbles.removeAll { _ in Bool.random() }
         
-        // add new bubbles (max 15 rule)
-        let availableSpace = maxBubbles - bubbles.count
+        let availableSpace = numberOfBubbles - bubbles.count
         let newCount = Int.random(in: 0...availableSpace)
         
         for _ in 0..<newCount {
@@ -135,7 +180,7 @@ struct StartGameView: View {
     }
     
     // MARK: Bubble Generator (no overlap)
-    func generateBubble(in size: CGSize) -> Bubble {
+    private func generateBubble(in size: CGSize) -> Bubble {
         
         var position: CGPoint
         
@@ -152,7 +197,7 @@ struct StartGameView: View {
     }
     
     // MARK: Pop Logic (Combo rule)
-    func popBubble(_ bubble: Bubble) {
+    private func popBubble(_ bubble: Bubble) {
         
         if let last = lastBubbleColor, last == bubble.color {
             let boosted = Int(Double(bubble.color.points) * 1.5)
@@ -166,8 +211,33 @@ struct StartGameView: View {
     }
     
     // MARK: Distance check (no overlap rule)
-    func distance(_ a: CGPoint, _ b: CGPoint) -> CGFloat {
+    private func distance(_ a: CGPoint, _ b: CGPoint) -> CGFloat {
         sqrt(pow(a.x - b.x, 2) + pow(a.y - b.y, 2))
+    }
+    
+    // MARK: Replay function
+    private func resetGame() {
+        timeLeft = Int(time)
+        score = 0
+        bubbles = []
+        lastBubbleColor = nil
+        
+        isGameFinished = false
+        isPostGame = false
+        
+        countdown = 3
+        isCountingDown = true
+    }
+    
+    private func getHighestScore() -> Int {
+        guard let data = UserDefaults.standard.data(forKey: "PlayerScores"),
+              let scores = try? JSONDecoder().decode([PlayerScore].self, from: data),
+              let maxScore = scores.map({ $0.score }).max()
+        else {
+            return 0
+        }
+        
+        return maxScore
     }
 }
 

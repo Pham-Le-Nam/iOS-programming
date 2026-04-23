@@ -10,8 +10,8 @@ import SwiftUI
 struct SettingsView: View {
   //  @StateObject var highScoreViewModel = HighScoreViewModel()
     @State private var countdownInput = ""
-    @State private var countdownValue: Double = 0
-    @State private var numberOfBubbles: Double = 0
+    @State private var countdownValue: Double = 60
+    @State private var numberOfBubbles: Double = 15
     @State private var playerName: String = "" //1Add for name UserDefaults 1
     var body: some View {
             VStack{
